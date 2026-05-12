@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Auth</title>
+
+<style>
+
+body{
+  margin:0;
+  font-family:Arial;
+  background:linear-gradient(135deg,#050505,#0f0f0f);
+  color:white;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:100vh;
+}
+
+.container{
+  width:350px;
+  background:#111;
+  padding:30px;
+  border-radius:16px;
+  box-shadow:0 0 40px rgba(255,0,60,0.2);
+}
+
+h2{
+  text-align:center;
+  margin-bottom:20px;
+}
+
+input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border:none;
+  border-radius:10px;
+  background:#1a1a1a;
+  color:white;
+}
+
+button{
+  width:100%;
+  padding:12px;
+  margin-top:10px;
+  border:none;
+  border-radius:10px;
+  background:#ff003c;
+  color:white;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.switch{
+  text-align:center;
+  margin-top:15px;
+  color:#aaa;
+  cursor:pointer;
+}
+
+.switch:hover{
+  color:white;
+}
+
+.hidden{
+  display:none;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h2 id="title">Login</h2>
+
+<!-- LOGIN -->
+<div id="loginBox">
+  <input id="loginEmail" placeholder="Email">
+  <input id="loginPass" type="password" placeholder="Password">
+  <button onclick="login()">Login</button>
+</div>
+
+<!-- SIGNUP -->
+<div id="signupBox" class="hidden">
+  <input id="signupEmail" placeholder="Email">
+  <input id="signupPass" type="password" placeholder="Password">
+  <button onclick="signup()">Create Account</button>
+</div>
+
+<div class="switch" onclick="toggle()">
+  <span id="switchText">Don't have an account? Sign up</span>
+</div>
+
+</div>
+
+<script>
+
+let mode = "login";
+
+// toggle UI
+function toggle(){
+
+  if(mode === "login"){
+    mode = "signup";
+    loginBox.classList.add("hidden");
+    signupBox.classList.remove("hidden");
+    title.innerText = "Sign Up";
+    switchText.innerText = "Already have an account? Login";
+  } else {
+    mode = "login";
+    loginBox.classList.remove("hidden");
+    signupBox.classList.add("hidden");
+    title.innerText = "Login";
+    switchText.innerText = "Don't have an account? Sign up";
+  }
+
+}
+
+// SIGNUP (REAL BACKEND)
+async function signup(){
+
+  const email = signupEmail.value;
+  const password = signupPass.value;
+
+  if(!email || !password){
+    alert("Fill all fields");
+    return;
+  }
+
+  const res = await fetch("https://a-backend-ufh8.onrender.com/signup", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if(data.success){
+    alert("Account created");
+    toggle();
+  } else {
+    alert(data.message || "Signup failed");
+  }
+
+}
+
+// LOGIN (REAL BACKEND)
+async function login(){
+
+  const email = loginEmail.value;
+  const password = loginPass.value;
+
+  if(!email || !password){
+    alert("Fill all fields");
+    return;
+  }
+
+  const res = await fetch("https://a-backend-ufh8.onrender.com/login", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password })
+  });
+
+  const data = await res.json();
+
+  if(data.success){
+
+    localStorage.setItem("user", data.email);
+
+    window.location.href = "/dashboard.html";
+
+  } else {
+    alert("Wrong email or password");
+  }
+
+}
+
+</script>
+
+</body>
+</html>
