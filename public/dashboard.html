@@ -1,1 +1,25 @@
+<h1>My Dashboard</h1>
 
+<button onclick="location.href='order.html'">New Order</button>
+
+<div id="orders"></div>
+
+<script>
+
+const email = localStorage.getItem("loggedIn");
+
+let orders =
+  JSON.parse(localStorage.getItem("orders") || "[]");
+
+let myOrders =
+  orders.filter(o => o.email === email);
+
+document.getElementById("orders").innerHTML =
+  myOrders.map(o => `
+    <div class="card">
+      <h3>${o.plan}</h3>
+      <p>Status: ${o.status}</p>
+    </div>
+  `).join("");
+
+</script>
