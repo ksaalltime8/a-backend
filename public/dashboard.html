@@ -1,25 +1,208 @@
-<h1>My Dashboard</h1>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Dashboard</title>
 
-<button onclick="location.href='order.html'">New Order</button>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
 
-<div id="orders"></div>
+<style>
+body{
+  margin:0;
+  font-family:'Inter', sans-serif;
+  background: radial-gradient(circle at top, #111 0%, #050505 100%);
+  color:white;
+}
+
+/* TOP BAR */
+.nav{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:18px 30px;
+  background:rgba(15,15,15,0.8);
+  backdrop-filter: blur(10px);
+  border-bottom:1px solid #222;
+  position:sticky;
+  top:0;
+}
+
+.logo{
+  font-weight:700;
+  color:#ff003c;
+  letter-spacing:1px;
+}
+
+.nav button{
+  background:#ff003c;
+  border:none;
+  padding:10px 16px;
+  border-radius:10px;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  transition:0.2s;
+}
+
+.nav button:hover{
+  transform:scale(1.05);
+}
+
+/* MAIN */
+.container{
+  max-width:900px;
+  margin:auto;
+  padding:30px;
+}
+
+.header{
+  margin-bottom:20px;
+}
+
+.header h1{
+  margin:0;
+  font-size:28px;
+}
+
+.header p{
+  color:#aaa;
+  margin-top:5px;
+}
+
+/* BUTTON */
+.new-btn{
+  background:linear-gradient(135deg,#ff003c,#ff4d6d);
+  border:none;
+  padding:12px 18px;
+  border-radius:12px;
+  color:white;
+  font-weight:600;
+  cursor:pointer;
+  margin:15px 0;
+  transition:0.2s;
+}
+
+.new-btn:hover{
+  transform:translateY(-2px);
+}
+
+/* ORDERS GRID */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+  gap:15px;
+  margin-top:20px;
+}
+
+/* CARD */
+.card{
+  background:rgba(255,255,255,0.03);
+  border:1px solid #222;
+  border-radius:14px;
+  padding:18px;
+  transition:0.2s;
+}
+
+.card:hover{
+  transform:translateY(-4px);
+  border-color:#ff003c55;
+}
+
+.card h3{
+  margin:0;
+  color:#fff;
+}
+
+.status{
+  margin-top:10px;
+  display:inline-block;
+  padding:5px 10px;
+  border-radius:8px;
+  font-size:12px;
+  background:#222;
+  color:#aaa;
+}
+
+.status.pending{
+  background:#ff003c22;
+  color:#ff6b81;
+}
+
+.status.done{
+  background:#00ff8822;
+  color:#4dff9a;
+}
+
+.date{
+  margin-top:10px;
+  font-size:12px;
+  color:#777;
+}
+
+.empty{
+  color:#777;
+  margin-top:20px;
+}
+</style>
+
+</head>
+
+<body>
+
+<div class="nav">
+  <div class="logo">MY DASHBOARD</div>
+  <button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+  <div class="header">
+    <h1>Welcome 👋</h1>
+    <p>Track your orders in real time</p>
+  </div>
+
+  <button class="new-btn" onclick="location.href='orders.html'">
+    + Create New Order
+  </button>
+
+  <div id="orders" class="grid"></div>
+
+</div>
 
 <script>
 
-const email = localStorage.getItem("loggedIn");
+const email = localStorage.getItem("user");
 
-let orders =
-  JSON.parse(localStorage.getItem("orders") || "[]");
+function logout(){
+  localStorage.removeItem("user");
+  window.location.href = "./auth.html";
+}
 
-let myOrders =
-  orders.filter(o => o.email === email);
+async function loadOrders(){
 
-document.getElementById("orders").innerHTML =
-  myOrders.map(o => `
+  const res = await fetch("https://a-backend-ufh8.onrender.com/orders/" + email);
+  const data = await res.json();
+
+  const container = document.getElementById("orders");
+
+  if(!data.length){
+    container.innerHTML = `<p class="empty">No orders yet.</p>`;
+    return;
+  }
+
+  container.innerHTML = data.map(o => `
     <div class="card">
       <h3>${o.plan}</h3>
-      <p>Status: ${o.status}</p>
+      <div class="status ${o.status.toLowerCase()}">${o.status}</div>
+      <div class="date">${o.date}</div>
     </div>
   `).join("");
 
+}
+
+loadOrders();
+
 </script>
+
+</body>
+</html>
