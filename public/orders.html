@@ -95,30 +95,26 @@ button:hover{
 </div>
 
 <script>
-
-const email = localStorage.getItem("user");
+const user = localStorage.getItem("user"); // same key as dashboard
 
 async function createOrder(){
-
   const plan = document.getElementById("plan").value;
 
   const res = await fetch("https://a-backend-ufh8.onrender.com/order", {
-    method:"POST",
-    headers: { "Content-Type":"application/json" },
-    body: JSON.stringify({ email, plan })
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email: user, plan })
   });
 
   const data = await res.json();
 
   if(data.success){
     alert("Order created successfully!");
-    window.location.href = "./dashboard.html";
+    window.location.href = "./dashboard.html"; // redirect to dashboard
   } else {
     alert("Failed to create order");
   }
-
 }
-
 </script>
 
 </body>
