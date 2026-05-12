@@ -2,207 +2,139 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Dashboard</title>
-
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
-
+<title>Client Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
 <style>
-body{
+body {
   margin:0;
-  font-family:'Inter', sans-serif;
-  background: radial-gradient(circle at top, #111 0%, #050505 100%);
-  color:white;
+  font-family: 'Orbitron', sans-serif;
+  background: #050505;
+  color: #fff;
+  min-height: 100vh;
 }
 
-/* TOP BAR */
-.nav{
+/* Topbar */
+.topbar {
   display:flex;
   justify-content:space-between;
   align-items:center;
-  padding:18px 30px;
-  background:rgba(15,15,15,0.8);
-  backdrop-filter: blur(10px);
-  border-bottom:1px solid #222;
-  position:sticky;
-  top:0;
+  padding:20px 40px;
+  background: rgba(14, 13, 13, 0.3); /* semi-transparent for glass effect */
+  backdrop-filter: blur(15px);   /* glass blur */
+  -webkit-backdrop-filter: blur(15px);
+  border-bottom:1px solid #330033;
+  box-shadow: 0 0 20px rgba(255,0,60,0.4);
 }
-
-.logo{
-  font-weight:700;
+.topbar h2 {
   color:#ff003c;
-  letter-spacing:1px;
+  font-weight:700;
+  font-size:28px;
+  margin:0;
+  text-shadow: 0 0 8px #ff003c;
 }
-
-.nav button{
+.logout {
   background:#ff003c;
   border:none;
-  padding:10px 16px;
-  border-radius:10px;
-  color:white;
-  font-weight:600;
-  cursor:pointer;
-  transition:0.2s;
-}
-
-.nav button:hover{
-  transform:scale(1.05);
-}
-
-/* MAIN */
-.container{
-  max-width:900px;
-  margin:auto;
-  padding:30px;
-}
-
-.header{
-  margin-bottom:20px;
-}
-
-.header h1{
-  margin:0;
-  font-size:28px;
-}
-
-.header p{
-  color:#aaa;
-  margin-top:5px;
-}
-
-/* BUTTON */
-.new-btn{
-  background:linear-gradient(135deg,#ff003c,#ff4d6d);
-  border:none;
-  padding:12px 18px;
+  padding:12px 24px;
   border-radius:12px;
-  color:white;
-  font-weight:600;
   cursor:pointer;
-  margin:15px 0;
-  transition:0.2s;
+  font-weight:bold;
+  text-shadow:0 0 3px #fff;
+  box-shadow:0 0 15px #ff003c;
+  transition:0.3s;
 }
+.logout:hover { transform: scale(1.05); box-shadow:0 0 25px #ff003c; }
 
-.new-btn:hover{
-  transform:translateY(-2px);
-}
+/* Container */
+.container { max-width:1000px; margin:50px auto; padding:0 20px; }
 
-/* ORDERS GRID */
-.grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
-  gap:15px;
-  margin-top:20px;
+/* Card */
+.card {
+  background:#111;
+  border-radius:16px;
+  padding:20px 25px;
+  margin-bottom:18px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  border:1px solid #330033;
+  box-shadow:0 0 20px rgba(255,0,60,0.3);
+  transition: transform 0.3s, box-shadow 0.3s;
 }
+.card:hover { transform:translateY(-5px); box-shadow:0 0 35px rgba(255,0,60,0.7); }
 
-/* CARD */
-.card{
-  background:rgba(255,255,255,0.03);
-  border:1px solid #222;
-  border-radius:14px;
-  padding:18px;
-  transition:0.2s;
-}
+/* Card info */
+.card-info { display:flex; flex-direction:column; }
+.card-info .plan { font-size:18px; font-weight:700; color:#ff003c; text-shadow:0 0 5px #ff003c; }
+.card-info .date { font-size:14px; color:#aaa; margin-top:5px; text-shadow:0 0 2px #444; }
 
-.card:hover{
-  transform:translateY(-4px);
-  border-color:#ff003c55;
+/* Status badge */
+.badge {
+  padding:8px 18px;
+  border-radius:16px;
+  font-weight:700;
+  text-transform:uppercase;
+  font-size:14px;
+  min-width:100px;
+  text-align:center;
+  box-shadow:0 0 10px #fff;
+  transition:0.3s;
 }
+.badge.Pending { background:#ff003c; color:#fff; box-shadow:0 0 15px #ff003c; }
+.badge.Processing { background:#ffd24d; color:#222; box-shadow:0 0 15px #ffd24d; }
+.badge.Done { background:#4dff88; color:#222; box-shadow:0 0 15px #4dff88; }
 
-.card h3{
-  margin:0;
-  color:#fff;
-}
+/* Empty */
+.empty { text-align:center; color:#777; font-style:italic; margin-top:60px; font-size:18px; text-shadow:0 0 3px #444; }
 
-.status{
-  margin-top:10px;
-  display:inline-block;
-  padding:5px 10px;
-  border-radius:8px;
-  font-size:12px;
-  background:#222;
-  color:#aaa;
-}
-
-.status.pending{
-  background:#ff003c22;
-  color:#ff6b81;
-}
-
-.status.done{
-  background:#00ff8822;
-  color:#4dff9a;
-}
-
-.date{
-  margin-top:10px;
-  font-size:12px;
-  color:#777;
-}
-
-.empty{
-  color:#777;
-  margin-top:20px;
-}
 </style>
-
 </head>
-
 <body>
 
-<div class="nav">
-  <div class="logo">MY DASHBOARD</div>
-  <button onclick="logout()">Logout</button>
-</div>
-
-<div class="container">
-
-  <div class="header">
-    <h1>Welcome 👋</h1>
-    <p>Track your orders in real time</p>
+<div class="topbar">
+<h2>Dashboard</h2>
+ <div style="display:flex; gap:10px;">
+    <button class="logout" onclick="goHome()">Home</button>
+    <button class="logout" onclick="logout()">Logout</button>
   </div>
 
-  <button class="new-btn" onclick="location.href='orders.html'">
-    + Create New Order
-  </button>
-
-  <div id="orders" class="grid"></div>
-
 </div>
+<section style="padding:20px; text-align:center; color:#ff003c; text-shadow:0 0 5px #ff003c;">
+  <h2>Track Your Orders</h2>
+  <p>All your website plans and orders will appear below. You can see their current status in real-time.</p>
+</section>
+
+<div class="container" id="orders"></div>
 
 <script>
-
-const email = localStorage.getItem("user");
-
-function logout(){
-  localStorage.removeItem("user");
-  window.location.href = "./auth.html";
+  function goHome(){
+  window.location.href="../index.html";
 }
+// Guard & logout
+const user = localStorage.getItem("user");
+if(!user) window.location.href="./auth.html";
+function logout(){ localStorage.removeItem("user"); window.location.href="./auth.html"; }
 
+// Load orders
 async function loadOrders(){
-
-  const res = await fetch("https://a-backend-ufh8.onrender.com/orders/" + email);
+  const res = await fetch(`https://a-backend-ufh8.onrender.com/orders/${user}`);
   const data = await res.json();
+  const box = document.getElementById("orders");
+  if(!data.length){ box.innerHTML=`<div class="empty">No orders yet.</div>`; return; }
 
-  const container = document.getElementById("orders");
-
-  if(!data.length){
-    container.innerHTML = `<p class="empty">No orders yet.</p>`;
-    return;
-  }
-
-  container.innerHTML = data.map(o => `
+  box.innerHTML = data.map(o=>`
     <div class="card">
-      <h3>${o.plan}</h3>
-      <div class="status ${o.status.toLowerCase()}">${o.status}</div>
-      <div class="date">${o.date}</div>
+      <div class="card-info">
+        <div class="plan">${o.plan}</div>
+        <div class="date">${o.date}</div>
+      </div>
+      <div class="badge ${o.status}">${o.status}</div>
     </div>
   `).join("");
-
 }
 
 loadOrders();
-
+setInterval(loadOrders,10000);
 </script>
-
 </body>
 </html>
