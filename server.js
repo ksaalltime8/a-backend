@@ -11,8 +11,18 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-app.use(express.static(require("path").join(process.cwd(), "public")));
 
+// ✅ serve frontend files
+app.use(express.static(require("path").join(process.cwd(), "public")));
+app.post("/login", async (req,res)=>{
+  const { email, password } = req.body;
+  const user = await User.findOne({ email, password });
+
+  if(!user) return res.json({ success:false, message:"Invalid login" });
+
+  // Send role to frontend
+  res.json({ success:true, email:user.email, role: user.role || "user" });
+});
 /* =========================
    MONGODB CONNECTION
 ========================= */
@@ -136,4 +146,21 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("🚀 Server running on port", PORT);
+});
+
+// Get all orders
+app.get("/all-orders", async (req,res)=>{
+  const orders = await Order.find({});
+  res.json(orders);
+});
+
+// Update order status
+app.post("/update", async (req,res)=>{
+  const { id, status } = req.body;
+  try{
+    await Order.findByIdAndUpdate(id, { status });
+    res.json({ success:true });
+  }catch(err){
+    res.json({ success:false, error:err.message });
+  }
 });
