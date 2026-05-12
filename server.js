@@ -123,24 +123,29 @@ Discord Contact
 =====================*/
 
 // Make sure to install axios: npm install axios
-const axios = require('axios');
+const axios = require("axios");
 
 app.post("/contact", async (req, res) => {
   const { name, email, message } = req.body;
-  
-  if(!name || !email || !message){
+
+  if (!name || !email || !message) {
     return res.json({ success: false, message: "All fields are required" });
   }
 
   try {
-    await axios.post("https://discord.com/api/webhooks/1503710771887214662/jKVpoTzMpvmiCIkeP48ustF4rrg2GXgfmHseNpSHDrLm9KkwMl6YpsgN2aFwdRgQ2xKJ", {
+    // Discord webhook payload
+    const webhookURL = "YOUR_DISCORD_WEBHOOK_URL"; // replace this
+
+    await axios.post(webhookURL, {
       content: `📩 **New Project Message**\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
+    }, {
+      headers: { "Content-Type": "application/json" }
     });
 
     res.json({ success: true });
 
   } catch (err) {
-    console.error(err);
+    console.error("Discord Webhook Error:", err.response?.data || err.message);
     res.json({ success: false, message: "Failed to send message" });
   }
 });
