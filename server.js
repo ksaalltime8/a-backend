@@ -2,36 +2,31 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
-const fetch = require("node-fetch"); // Make sure to install: npm install node-fetch
+const fetch = require("node-fetch"); // Make sure node-fetch is in package.json
 
 const app = express();
 
 /* =========================
    MIDDLEWARE
 ========================= */
-
 app.use(cors());
 app.use(express.json());
-
-// Serve frontend files
-app.use(express.static(require("path").join(process.cwd(), "public")));
+app.use(express.static(path.join(process.cwd(), "public")));
 
 /* =========================
    MONGODB CONNECTION
 ========================= */
-
 mongoose.connect(process.env.MONGO_URL)
   .then(() => console.log("✅ MongoDB Connected"))
-  .catch((err) => console.log("❌ MongoDB Error:", err));
+  .catch(err => console.log("❌ MongoDB Error:", err));
 
 /* =========================
    MODELS
 ========================= */
-
 const User = mongoose.model("User", {
   email: String,
   password: String,
-  role: String // Optional if you want roles for admin
+  role: String // optional: "admin" for admin users
 });
 
 const Order = mongoose.model("Order", {
@@ -54,17 +49,10 @@ app.get("/", (req, res) => {
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const exists = await User.findOne({ email });
-
-    if (exists) {
-      return res.json({ success: false, message: "User already exists" });
-    }
-
+    if (exists) return res.json({ success: false, message: "User already exists" });
     await User.create({ email, password });
-
     res.json({ success: true });
-
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
@@ -74,15 +62,9 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-
     const user = await User.findOne({ email, password });
-
-    if (!user) {
-      return res.json({ success: false, message: "Invalid login" });
-    }
-
-    res.json({ success: true, email, role: user.role || "user" });
-
+    if (!user) return res.json({ success: false, message: "Invalid login" });
+    res.json({ success: true, email: user.email, role: user.role || "user" });
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
@@ -92,16 +74,8 @@ app.post("/login", async (req, res) => {
 app.post("/order", async (req, res) => {
   try {
     const { email, plan } = req.body;
-
-    await Order.create({
-      email,
-      plan,
-      status: "Pending",
-      date: new Date().toLocaleString()
-    });
-
+    await Order.create({ email, plan, status: "Pending", date: new Date().toLocaleString() });
     res.json({ success: true });
-
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
@@ -112,42 +86,47 @@ app.get("/orders/:email", async (req, res) => {
   try {
     const orders = await Order.find({ email: req.params.email });
     res.json(orders);
-
   } catch (err) {
     res.json([]);
   }
 });
 
-/* ---------- GET ALL ORDERS ---------- */
-app.get("/all-orders", async (req,res)=>{
-  const orders = await Order.find({});
-  res.json(orders);
+/* ---------- GET ALL ORDERS (ADMIN) ---------- */
+app.get("/all-orders", async (req, res) => {
+  try {
+    const orders = await Order.find({});
+    res.json(orders);
+  } catch (err) {
+    res.json([]);
+  }
 });
 
-/* ---------- UPDATE ORDER WITH DISCORD NOTIFICATION ---------- */
-const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK; // set in env vars
+/* ---------- UPDATE ORDER + DISCORD ---------- */
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
 
 app.post("/update", async (req, res) => {
   try {
     const { id, status } = req.body;
-
     const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
-
     res.json({ success: true });
 
-    // Send Discord notification
-    if(DISCORD_WEBHOOK && order){
-      await fetch(DISCORD_WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          content: `📦 **Order Updated**
+    // Send Discord notification safely
+    if (DISCORD_WEBHOOK && order) {
+      try {
+        await fetch(DISCORD_WEBHOOK, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            content: `📦 **Order Updated**
 - User: ${order.email}
 - Plan: ${order.plan}
 - Status: ${order.status}
 - Date: ${order.date}`
-        })
-      });
+          })
+        });
+      } catch (err) {
+        console.log("Discord webhook error:", err.message);
+      }
     }
 
   } catch (err) {
@@ -158,9 +137,5 @@ app.post("/update", async (req, res) => {
 /* =========================
    START SERVER
 ========================= */
-
 const PORT = process.env.PORT || 3000;
-
-app.listen(PORT, () => {
-  console.log("🚀 Server running on port", PORT);
-});
+app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
