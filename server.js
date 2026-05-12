@@ -116,3 +116,31 @@ app.post("/update", async (req, res) => {
 ========================= */
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log("🚀 Server running on port", PORT));
+
+
+/*========================
+Discord Contact 
+=====================*/
+
+// Make sure to install axios: npm install axios
+const axios = require('axios');
+
+app.post("/contact", async (req, res) => {
+  const { name, email, message } = req.body;
+  
+  if(!name || !email || !message){
+    return res.json({ success: false, message: "All fields are required" });
+  }
+
+  try {
+    await axios.post("https://discord.com/api/webhooks/1503710771887214662/jKVpoTzMpvmiCIkeP48ustF4rrg2GXgfmHseNpSHDrLm9KkwMl6YpsgN2aFwdRgQ2xKJ", {
+      content: `📩 **New Project Message**\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
+    });
+
+    res.json({ success: true });
+
+  } catch (err) {
+    console.error(err);
+    res.json({ success: false, message: "Failed to send message" });
+  }
+});
