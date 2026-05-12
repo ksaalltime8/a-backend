@@ -2,7 +2,6 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
-const fetch = require("node-fetch"); // Make sure node-fetch is in package.json
 
 const app = express();
 
@@ -26,7 +25,7 @@ mongoose.connect(process.env.MONGO_URL)
 const User = mongoose.model("User", {
   email: String,
   password: String,
-  role: String // optional: "admin" for admin users
+  role: String // optional
 });
 
 const Order = mongoose.model("Order", {
@@ -101,34 +100,12 @@ app.get("/all-orders", async (req, res) => {
   }
 });
 
-/* ---------- UPDATE ORDER + DISCORD ---------- */
-const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK;
-
+/* ---------- UPDATE ORDER ---------- */
 app.post("/update", async (req, res) => {
   try {
     const { id, status } = req.body;
-    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
+    await Order.findByIdAndUpdate(id, { status });
     res.json({ success: true });
-
-    // Send Discord notification safely
-    if (DISCORD_WEBHOOK && order) {
-      try {
-        await fetch(DISCORD_WEBHOOK, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            content: `📦 **Order Updated**
-- User: ${order.email}
-- Plan: ${order.plan}
-- Status: ${order.status}
-- Date: ${order.date}`
-          })
-        });
-      } catch (err) {
-        console.log("Discord webhook error:", err.message);
-      }
-    }
-
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
