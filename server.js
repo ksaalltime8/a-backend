@@ -2,6 +2,7 @@ const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const path = require("path");
+const fetch = require("node-fetch"); // Make sure to install: npm install node-fetch
 
 const app = express();
 
@@ -12,17 +13,9 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// ✅ serve frontend files
+// Serve frontend files
 app.use(express.static(require("path").join(process.cwd(), "public")));
-app.post("/login", async (req,res)=>{
-  const { email, password } = req.body;
-  const user = await User.findOne({ email, password });
 
-  if(!user) return res.json({ success:false, message:"Invalid login" });
-
-  // Send role to frontend
-  res.json({ success:true, email:user.email, role: user.role || "user" });
-});
 /* =========================
    MONGODB CONNECTION
 ========================= */
@@ -37,7 +30,8 @@ mongoose.connect(process.env.MONGO_URL)
 
 const User = mongoose.model("User", {
   email: String,
-  password: String
+  password: String,
+  role: String // Optional if you want roles for admin
 });
 
 const Order = mongoose.model("Order", {
@@ -87,7 +81,7 @@ app.post("/login", async (req, res) => {
       return res.json({ success: false, message: "Invalid login" });
     }
 
-    res.json({ success: true, email });
+    res.json({ success: true, email, role: user.role || "user" });
 
   } catch (err) {
     res.json({ success: false, error: err.message });
@@ -113,7 +107,7 @@ app.post("/order", async (req, res) => {
   }
 });
 
-/* ---------- GET ORDERS ---------- */
+/* ---------- GET USER ORDERS ---------- */
 app.get("/orders/:email", async (req, res) => {
   try {
     const orders = await Order.find({ email: req.params.email });
@@ -124,14 +118,37 @@ app.get("/orders/:email", async (req, res) => {
   }
 });
 
-/* ---------- UPDATE ORDER ---------- */
+/* ---------- GET ALL ORDERS ---------- */
+app.get("/all-orders", async (req,res)=>{
+  const orders = await Order.find({});
+  res.json(orders);
+});
+
+/* ---------- UPDATE ORDER WITH DISCORD NOTIFICATION ---------- */
+const DISCORD_WEBHOOK = process.env.DISCORD_WEBHOOK; // set in env vars
+
 app.post("/update", async (req, res) => {
   try {
     const { id, status } = req.body;
 
-    await Order.findByIdAndUpdate(id, { status });
+    const order = await Order.findByIdAndUpdate(id, { status }, { new: true });
 
     res.json({ success: true });
+
+    // Send Discord notification
+    if(DISCORD_WEBHOOK && order){
+      await fetch(DISCORD_WEBHOOK, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          content: `📦 **Order Updated**
+- User: ${order.email}
+- Plan: ${order.plan}
+- Status: ${order.status}
+- Date: ${order.date}`
+        })
+      });
+    }
 
   } catch (err) {
     res.json({ success: false, error: err.message });
@@ -146,21 +163,4 @@ const PORT = process.env.PORT || 3000;
 
 app.listen(PORT, () => {
   console.log("🚀 Server running on port", PORT);
-});
-
-// Get all orders
-app.get("/all-orders", async (req,res)=>{
-  const orders = await Order.find({});
-  res.json(orders);
-});
-
-// Update order status
-app.post("/update", async (req,res)=>{
-  const { id, status } = req.body;
-  try{
-    await Order.findByIdAndUpdate(id, { status });
-    res.json({ success:true });
-  }catch(err){
-    res.json({ success:false, error:err.message });
-  }
 });
