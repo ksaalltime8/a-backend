@@ -1,19 +1,27 @@
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
+const path = require("path");
 
 const app = express();
+
+/* =========================
+   MIDDLEWARE
+========================= */
 
 app.use(cors());
 app.use(express.json());
 
+// ✅ serve frontend files
+app.use(express.static(require("path").join(process.cwd(), "public")));
+
 /* =========================
-   SAFE MONGODB CONNECTION
+   MONGODB CONNECTION
 ========================= */
 
 mongoose.connect(process.env.MONGO_URL)
-.then(() => console.log("✅ MongoDB Connected"))
-.catch((err) => console.log("❌ MongoDB Error:", err));
+  .then(() => console.log("✅ MongoDB Connected"))
+  .catch((err) => console.log("❌ MongoDB Error:", err));
 
 /* =========================
    MODELS
@@ -32,17 +40,15 @@ const Order = mongoose.model("Order", {
 });
 
 /* =========================
-   HEALTH CHECK ROUTE
+   ROUTES
 ========================= */
 
+// Health check
 app.get("/", (req, res) => {
   res.send("🔥 Backend is running correctly");
 });
 
-/* =========================
-   SIGNUP
-========================= */
-
+/* ---------- SIGNUP ---------- */
 app.post("/signup", async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -62,31 +68,25 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-/* =========================
-   LOGIN
-========================= */
-
+/* ---------- LOGIN ---------- */
 app.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email, password });
 
-    if (user) {
-      res.json({ success: true, email });
-    } else {
-      res.json({ success: false, message: "Invalid login" });
+    if (!user) {
+      return res.json({ success: false, message: "Invalid login" });
     }
+
+    res.json({ success: true, email });
 
   } catch (err) {
     res.json({ success: false, error: err.message });
   }
 });
 
-/* =========================
-   CREATE ORDER
-========================= */
-
+/* ---------- CREATE ORDER ---------- */
 app.post("/order", async (req, res) => {
   try {
     const { email, plan } = req.body;
@@ -105,10 +105,7 @@ app.post("/order", async (req, res) => {
   }
 });
 
-/* =========================
-   GET USER ORDERS
-========================= */
-
+/* ---------- GET ORDERS ---------- */
 app.get("/orders/:email", async (req, res) => {
   try {
     const orders = await Order.find({ email: req.params.email });
@@ -119,10 +116,7 @@ app.get("/orders/:email", async (req, res) => {
   }
 });
 
-/* =========================
-   UPDATE ORDER STATUS (ADMIN)
-========================= */
-
+/* ---------- UPDATE ORDER ---------- */
 app.post("/update", async (req, res) => {
   try {
     const { id, status } = req.body;
@@ -137,7 +131,7 @@ app.post("/update", async (req, res) => {
 });
 
 /* =========================
-   START SERVER (RENDER SAFE)
+   START SERVER
 ========================= */
 
 const PORT = process.env.PORT || 3000;
