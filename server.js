@@ -11,8 +11,6 @@ const app = express();
 
 app.use(cors());
 app.use(express.json());
-
-// ✅ serve frontend files
 app.use(express.static(require("path").join(process.cwd(), "public")));
 
 /* =========================
