@@ -149,7 +149,7 @@ app.post("/contact", async (req, res) => {
     res.json({ success: false, message: "Failed to send message" });
   }
 });
-import Review from "./models/Review.js";
+import Review from "./Review.js";
 
 // CREATE REVIEW
 app.post("/reviews", async (req, res) => {
