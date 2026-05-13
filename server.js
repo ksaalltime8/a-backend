@@ -1,16 +1,23 @@
-const express = require("express");
-const mongoose = require("mongoose");
-const cors = require("cors");
-const path = require("path");
-
-const app = express();
+import express from "express";
+import mongoose from "mongoose";
+import cors from "cors";
+import path from "path";
+import { fileURLToPath } from "url";
 
 /* =========================
-   MIDDLEWARE
+   FIX __dirname (important in ES modules)
 ========================= */
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+/* =========================
+   APP SETUP
+========================= */
+const app = express();
+
 app.use(cors());
 app.use(express.json());
-app.use(express.static(path.join(process.cwd(), "public")));
+app.use(express.static(path.join(__dirname, "public")));
 
 /* =========================
    MONGODB CONNECTION
