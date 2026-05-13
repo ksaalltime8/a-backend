@@ -105,7 +105,41 @@ body {
 </section>
 
 <div class="container" id="orders"></div>
+<section style="margin-top:60px; padding:20px; text-align:center;">
 
+  <h2 style="color:#ff003c; text-shadow:0 0 8px #ff003c;">
+    Leave a Review
+  </h2>
+
+  <p style="color:#aaa;">Tell us about your experience</p>
+
+  <div style="max-width:600px; margin:20px auto; text-align:left;">
+
+    <!-- STAR RATING -->
+    <div id="stars" style="font-size:28px; cursor:pointer; color:#444;">
+      ★ ★ ★ ★ ★
+    </div>
+
+    <input id="reviewText" placeholder="Write your review..."
+      style="width:100%; padding:12px; margin-top:15px;
+      background:#111; border:1px solid #330033;
+      color:#fff; border-radius:10px;">
+
+    <button onclick="submitReview()"
+      style="margin-top:15px; width:100%;
+      padding:12px; background:#ff003c;
+      border:none; color:#fff; font-weight:bold;
+      border-radius:10px; cursor:pointer;
+      box-shadow:0 0 15px #ff003c;">
+      Submit Review
+    </button>
+
+  </div>
+
+  <!-- REVIEWS LIST -->
+  <div id="reviews" style="max-width:800px; margin:40px auto;"></div>
+
+</section>
 <script>
   function goHome(){
   window.location.href="../index.html";
@@ -135,6 +169,90 @@ async function loadOrders(){
 
 loadOrders();
 setInterval(loadOrders,10000);
+</script>
+  <script>
+let rating = 5;
+
+// STAR SELECT
+const starsEl = document.getElementById("stars");
+const stars = starsEl.innerHTML.split("★").filter(Boolean);
+
+function renderStars(r){
+  starsEl.innerHTML = "";
+
+  for(let i=1;i<=5;i++){
+    const span = document.createElement("span");
+    span.innerHTML = "★";
+    span.style.color = i <= r ? "#ff003c" : "#444";
+    span.onclick = () => {
+      rating = i;
+      renderStars(rating);
+    };
+    starsEl.appendChild(span);
+  }
+}
+
+renderStars(rating);
+
+// SUBMIT REVIEW
+async function submitReview(){
+  const text = document.getElementById("reviewText").value;
+
+  if(!text){
+    alert("Write a review first");
+    return;
+  }
+
+  try {
+    const res = await fetch("https://a-backend-ufh8.onrender.com/reviews", {
+      method:"POST",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({
+        user,
+        text,
+        rating
+      })
+    });
+
+    const data = await res.json();
+
+    if(data.success){
+      alert("Review submitted!");
+      document.getElementById("reviewText").value = "";
+      loadReviews();
+    } else {
+      alert("Failed to submit review");
+    }
+
+  } catch(err){
+    console.log(err);
+    alert("Error sending review");
+  }
+}
+
+// LOAD REVIEWS
+async function loadReviews(){
+  const res = await fetch("https://a-backend-ufh8.onrender.com/reviews");
+  const data = await res.json();
+
+  const box = document.getElementById("reviews");
+
+  if(!data.length){
+    box.innerHTML = "<p style='color:#777;'>No reviews yet</p>";
+    return;
+  }
+
+  box.innerHTML = data.map(r => `
+    <div class="review-card">
+      <div class="review-stars">
+        ${"★".repeat(r.rating)}${"☆".repeat(5 - r.rating)}
+      </div>
+      <div class="review-text">${r.text}</div>
+    </div>
+  `).join("");
+}
+
+loadReviews();
 </script>
 </body>
 </html>
