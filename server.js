@@ -130,7 +130,7 @@ Discord Contact
 =====================*/
 
 // Make sure to install axios: npm install axios
-const axios = require("axios");
+import axios from "axios";
 
 app.post("/contact", async (req, res) => {
   const { name, email, message } = req.body;
