@@ -149,3 +149,43 @@ app.post("/contact", async (req, res) => {
     res.json({ success: false, message: "Failed to send message" });
   }
 });
+import Review from "./models/Review.js";
+
+// CREATE REVIEW
+app.post("/reviews", async (req, res) => {
+  try {
+    const { user, text, rating } = req.body;
+
+    if (!text) {
+      return res.status(400).json({
+        success: false,
+        message: "Review text is required"
+      });
+    }
+
+    const review = new Review({
+      user,
+      text,
+      rating
+    });
+
+    await review.save();
+
+    res.json({ success: true, review });
+
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ success: false });
+  }
+});
+
+
+// GET REVIEWS
+app.get("/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json([]);
+  }
+});
