@@ -159,6 +159,7 @@ app.post("/contact", async (req, res) => {
 
 import Review from "./Review.js";
 
+// CREATE REVIEW (ONLY BUYERS)
 app.post("/reviews", async (req, res) => {
   try {
     const { user, text, rating } = req.body;
@@ -184,7 +185,7 @@ app.post("/reviews", async (req, res) => {
       });
     }
 
-    // ✅ ALLOW REVIEW
+    // 📝 SAVE REVIEW
     const review = new Review({
       user,
       text,
@@ -193,18 +194,32 @@ app.post("/reviews", async (req, res) => {
 
     await review.save();
 
+    // 🔥 SEND TO DISCORD
+    await sendToDiscord(review);
+
     res.json({ success: true, review });
 
   } catch (err) {
-    console.log(err);
+    console.log("Review error:", err);
     res.status(500).json({ success: false });
+  }
+});
+
+
+// GET REVIEWS
+app.get("/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (err) {
+    res.status(500).json([]);
   }
 });
 
 async function sendToDiscord(review) {
   try {
-    await axios.post(process.env.DISCORD_WEBHOOK, {
-      content: `🔥 New Review Received`,
+    await axios.post(process.env.DISCORD_REVIEW_WEBHOOK, {
+      content: "🔥 New Review Received",
       embeds: [
         {
           title: "New Client Review",
@@ -225,7 +240,7 @@ async function sendToDiscord(review) {
               value: review.text
             }
           ],
-          timestamp: new Date()
+          timestamp: new Date().toISOString()
         }
       ]
     });
