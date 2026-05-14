@@ -178,7 +178,7 @@ async function processDiscordQueue() {
 
   const review = discordQueue.shift();
   try {
-    await axios.post(process.env.DISCORD_WEBHOOK, {
+    await axios.post(process.env.DISCORD_REVIEW_WEBHOOK, {
       content: "🔥 New Review Received",
       embeds: [
         {
