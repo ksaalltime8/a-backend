@@ -162,65 +162,75 @@ app.post("/contact", async (req, res) => {
   }
 });
 
-async function sendToDiscord(review) {
-  try {
-    await axios.post(process.env.DISCORD_WEBHOOK, {
-      content: "🔥 New Review Received",
-      embeds: [
-        {
-          title: "New Client Review",
-          color: 16711680,
-          fields: [
-            {
-              name: "User",
-              value: review.user || "Anonymous",
-              inline: true
-            },
-            {
-              name: "Rating",
-              value: "⭐".repeat(review.rating || 5),
-              inline: true
-            },
-            {
-              name: "Review",
-              value: review.text
-            }
-          ],
-          timestamp: new Date()
-        }
-      ]
-    });
-
-    console.log("✅ Sent to Discord");
-  } catch (err) {
-    console.log("❌ Discord error:", err.message);
-  }
-}
-
 import Review from "./Review.js";
 
-// CREATE REVIEW (ONLY BUYERS)
+
+/* =========================
+   DISCORD QUEUE SYSTEM
+   Avoid 429 rate limits
+========================= */
+const discordQueue = [];
+let isSendingDiscord = false;
+
+async function processDiscordQueue() {
+  if (isSendingDiscord || !discordQueue.length) return;
+
+  isSendingDiscord = true;
+
+  while (discordQueue.length) {
+    const review = discordQueue.shift();
+    try {
+      await axios.post(process.env.DISCORD_REVIEW_WEBHOOK, {
+        content: "🔥 New Review Received",
+        embeds: [
+          {
+            title: "New Client Review",
+            color: 16711680,
+            fields: [
+              { name: "User", value: review.user || "Anonymous", inline: true },
+              { name: "Rating", value: "⭐".repeat(review.rating || 5), inline: true },
+              { name: "Review", value: review.text }
+            ],
+            timestamp: new Date()
+          }
+        ]
+      });
+      console.log(`✅ Sent review from ${review.user} to Discord`);
+    } catch (err) {
+      console.log("❌ Discord error:", err.message);
+      // Push back to queue if needed
+      discordQueue.push(review);
+    }
+
+    // wait 1 second between requests to respect Discord limits
+    await new Promise(r => setTimeout(r, 1000));
+  }
+
+  isSendingDiscord = false;
+}
+
+/* =========================
+   CREATE REVIEW ROUTE (ONLY BUYERS)
+========================= */
 app.post("/reviews", async (req, res) => {
   try {
     const { user, text, rating } = req.body;
 
     if (!user || !text) {
-      return res.status(400).json({
-        success: false,
-        message: "Missing data"
-      });
+      return res.status(400).json({ success: false, message: "Missing data" });
     }
 
-    const review = new Review({
-      user,
-      text,
-      rating: rating || 5
-    });
+    // 🔐 OPTIONAL: Check if user has orders before allowing review
+    // const orders = await Order.find({ email: user });
+    // if (!orders.length) return res.status(403).json({ success: false, message: "Buy a plan first" });
 
+    // Save review to database
+    const review = new Review({ user, text, rating: rating || 5 });
     await review.save();
 
-    // 🔥 SEND TO DISCORD HERE
-    await sendToDiscord(review);
+    // Queue the review for Discord
+    discordQueue.push(review);
+    processDiscordQueue(); // start sending if not already running
 
     res.json({ success: true, review });
 
@@ -230,3 +240,15 @@ app.post("/reviews", async (req, res) => {
   }
 });
 
+/* =========================
+   GET REVIEWS
+========================= */
+app.get("/reviews", async (req, res) => {
+  try {
+    const reviews = await Review.find().sort({ createdAt: -1 });
+    res.json(reviews);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json([]);
+  }
+});
