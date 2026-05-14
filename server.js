@@ -169,12 +169,6 @@ app.post("/contact", async (req, res) => {
    REVIEW ROUTES
 ========================= */
 
-const Review = mongoose.model("Review", {
-  user: String,    // who left the review (email)
-  text: String,    // review text
-  rating: { type: Number, default: 5 } // rating stars
-}, { timestamps: true });
-
 // POST a review
 app.post("/reviews", async (req, res) => {
   try {
