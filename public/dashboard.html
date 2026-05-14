@@ -143,162 +143,74 @@ body {
 
 </section>
 <script>
-let rating = 5;
+let rating = 5; // default
 
-/* =========================
-   STAR SELECT (INPUT)
-========================= */
-const starsEl = document.getElementById("stars");
+function setRating(r) {
+  rating = r;
+  renderStars(r);
+}
 
-function renderStars(r){
-  if(!starsEl) return;
-
+function renderStars(r) {
+  const starsEl = document.getElementById("stars");
+  if (!starsEl) return;
   starsEl.innerHTML = "";
-
-  for(let i = 1; i <= 5; i++){
+  for (let i = 1; i <= 5; i++) {
     const span = document.createElement("span");
     span.innerHTML = "★";
-
     span.style.cursor = "pointer";
-    span.style.fontSize = "22px";
-    span.style.marginRight = "5px";
-    span.style.transition = "0.2s";
     span.style.color = i <= r ? "#ff003c" : "#333";
-
-    span.onclick = () => {
-      rating = i;
-      renderStars(rating);
-    };
-
+    span.onclick = () => setRating(i);
     starsEl.appendChild(span);
   }
 }
 
 renderStars(rating);
 
-
-/* =========================
-   SUBMIT REVIEW
-========================= */
-async function submitReview(){
-  const text = document.getElementById("reviewText").value;
-
-  if(!text){
-    alert("Write a review first");
-    return;
-  }
+async function submitReview() {
+  const textEl = document.getElementById("reviewText");
+  const text = textEl?.value;
+  if (!text) return alert("Write a review first");
 
   try {
     const res = await fetch("https://a-backend-ufh8.onrender.com/reviews", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user,
-        text,
-        rating
-      })
+      body: JSON.stringify({ user: localStorage.getItem("user"), text, rating })
     });
-
     const data = await res.json();
-
-    if(data.success){
+    if (data.success) {
       alert("Review submitted!");
-
-      document.getElementById("reviewText").value = "";
+      if (textEl) textEl.value = "";
       loadReviews();
-
     } else {
       alert(data.message || "Failed to submit review");
     }
-
-  } catch(err){
+  } catch (err) {
     console.log(err);
     alert("Error sending review");
   }
 }
 
-
-/* =========================
-   DISPLAY STARS (REVIEW LIST)
-========================= */
-function starsHTML(rating = 5){
-  rating = Math.max(0, Math.min(5, Number(rating)));
-
-  let html = "";
-
-  for(let i = 1; i <= 5; i++){
-    html += `<span style="color:#ff003c; font-size:18px;">
-      ${i <= rating ? "★" : "☆"}
-    </span>`;
-  }
-
-  return html;
-}
-
-
-/* =========================
-   LOAD REVIEWS (GRID FIXED)
-========================= */
-async function loadReviews(){
+// Function to load reviews on dashboard
+async function loadReviews() {
   try {
     const res = await fetch("https://a-backend-ufh8.onrender.com/reviews");
-    const data = await res.json();
+    const reviews = await res.json();
+    const container = document.getElementById("reviewsContainer");
+    if (!container) return;
 
-    const box = document.getElementById("reviewsContainer");
-
-    if(!box) return;
-
-    if(!data.length){
-      box.innerHTML = "<p style='color:#777;text-align:center'>No reviews yet</p>";
-      return;
-    }
-
-    box.innerHTML = data.map(r => `
+    container.innerHTML = reviews.map(r => `
       <div class="review-card">
-        <div class="review-stars">
-          ${starsHTML(r.rating)}
-        </div>
-        <div class="review-text">
-          ${r.text}
-        </div>
+        <div class="review-stars">${"★".repeat(r.rating || 5)}</div>
+        <div class="review-text">${r.text}</div>
       </div>
     `).join("");
-
-  } catch(err){
+  } catch (err) {
     console.log("Failed to load reviews:", err);
   }
 }
 
 window.addEventListener("DOMContentLoaded", loadReviews);
-</script><script>
-  function goHome(){
-  window.location.href="../index.html";
-}
-// Guard & logout
-const user = localStorage.getItem("user");
-if(!user) window.location.href="./auth.html";
-function logout(){ localStorage.removeItem("user"); window.location.href="./auth.html"; }
-
-// Load orders
-async function loadOrders(){
-  const res = await fetch(`https://a-backend-ufh8.onrender.com/orders/${user}`);
-  const data = await res.json();
-  const box = document.getElementById("orders");
-  if(!data.length){ box.innerHTML=`<div class="empty">No orders yet.</div>`; return; }
-
-  box.innerHTML = data.map(o=>`
-    <div class="card">
-      <div class="card-info">
-        <div class="plan">${o.plan}</div>
-        <div class="date">${o.date}</div>
-      </div>
-      <div class="badge ${o.status}">${o.status}</div>
-    </div>
-  `).join("");
-}
-
-loadOrders();
-setInterval(loadOrders,10000);
 </script>
 </body>
 </html>
