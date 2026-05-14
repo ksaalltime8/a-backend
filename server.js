@@ -12,6 +12,12 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(process.cwd(), "public")));
 
+
+app.use(cors({
+  origin: 'https://k7devs.com', // your frontend domain
+  methods: ['GET','POST','PUT','DELETE'],
+  credentials: true
+}));
 /* =========================
    MONGODB CONNECTION
 ========================= */
