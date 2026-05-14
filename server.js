@@ -156,20 +156,35 @@ app.post("/contact", async (req, res) => {
     res.json({ success: false, message: "Failed to send message" });
   }
 });
+import axios from "axios";
 import Review from "./Review.js";
 
-// CREATE REVIEW
 app.post("/reviews", async (req, res) => {
   try {
     const { user, text, rating } = req.body;
 
-    if (!text) {
+    if (!user || !text) {
       return res.status(400).json({
         success: false,
-        message: "Review text is required"
+        message: "Missing data"
       });
     }
 
+    // 🔐 CHECK IF USER HAS ORDER
+    const ordersRes = await axios.get(
+      `https://a-backend-ufh8.onrender.com/orders/${user}`
+    );
+
+    const orders = ordersRes.data;
+
+    if (!orders || orders.length === 0) {
+      return res.status(403).json({
+        success: false,
+        message: "You must purchase a plan to leave a review"
+      });
+    }
+
+    // ✅ ALLOW REVIEW
     const review = new Review({
       user,
       text,
@@ -183,15 +198,5 @@ app.post("/reviews", async (req, res) => {
   } catch (err) {
     console.log(err);
     res.status(500).json({ success: false });
-  }
-});
-
-// GET REVIEWS
-app.get("/reviews", async (req, res) => {
-  try {
-    const reviews = await Review.find().sort({ createdAt: -1 });
-    res.json(reviews);
-  } catch (err) {
-    res.status(500).json([]);
   }
 });
