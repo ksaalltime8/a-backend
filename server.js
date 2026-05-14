@@ -41,6 +41,11 @@ const Order = mongoose.model("Order", {
   status: String,
   date: String
 });
+const Review = mongoose.model("Review", {
+  user: String,    // who left the review (email)
+  text: String,    // review text
+  rating: { type: Number, default: 5 } // rating stars
+}, { timestamps: true });
 
 /* =========================
    ROUTES
