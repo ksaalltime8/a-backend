@@ -146,22 +146,24 @@ body {
 let rating = 5;
 
 /* =========================
-   STAR SELECT (FIXED)
+   STAR SELECT (FORM INPUT)
 ========================= */
 const starsEl = document.getElementById("stars");
 
 function renderStars(r){
+  if(!starsEl) return;
+
   starsEl.innerHTML = "";
 
   for(let i = 1; i <= 5; i++){
     const span = document.createElement("span");
     span.innerHTML = "★";
+
     span.style.cursor = "pointer";
     span.style.fontSize = "22px";
     span.style.marginRight = "5px";
     span.style.transition = "0.2s";
-
-    span.style.color = i <= r ? "#ffcc00" : "#333";
+    span.style.color = i <= r ? "#ff003c" : "#333";
 
     span.onclick = () => {
       rating = i;
@@ -203,8 +205,8 @@ async function submitReview(){
       alert("Review submitted!");
 
       document.getElementById("reviewText").value = "";
-
       loadReviews();
+
     } else {
       alert(data.message || "Failed to submit review");
     }
@@ -217,36 +219,32 @@ async function submitReview(){
 
 
 /* =========================
-   STAR DISPLAY FUNCTION
-========================= */
-function starsHTML(rating = 5){
-  let html = "";
-  for(let i = 1; i <= 5; i++){
-    html += i <= rating ? "★" : "☆";
-  }
-  return html;
-}
-
-
-/* =========================
-   LOAD REVIEWS (SLIDER READY)
+   DISPLAY STARS (REVIEW LIST)
 ========================= */
 function starsHTML(rating = 5){
   rating = Math.max(0, Math.min(5, Number(rating)));
 
   let html = "";
+
   for(let i = 1; i <= 5; i++){
-    html += `<span>${i <= rating ? "★" : "☆"}</span>`;
+    html += `<span style="color:#ff003c">${i <= rating ? "★" : "☆"}</span>`;
   }
+
   return html;
 }
 
+
+/* =========================
+   LOAD REVIEWS
+========================= */
 async function loadReviews(){
   try {
     const res = await fetch("https://a-backend-ufh8.onrender.com/reviews");
     const data = await res.json();
 
     const box = document.getElementById("reviewsContainer");
+
+    if(!box) return;
 
     const cards = data.map(r => `
       <div class="review-card">
@@ -266,7 +264,7 @@ async function loadReviews(){
   }
 }
 
-loadReviews();
+window.addEventListener("DOMContentLoaded", loadReviews);
 </script>
 <script>
   function goHome(){
