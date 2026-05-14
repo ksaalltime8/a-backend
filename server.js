@@ -186,24 +186,30 @@ app.post("/contact", async (req, res) => {
   const { name, email, message } = req.body;
 
   if (!name || !email || !message) {
-    return res.json({ success: false, message: "All fields are required" });
+    return res.status(400).json({ success: false, message: "All fields are required" });
   }
 
   try {
-    // Discord webhook payload
     const webhookURL = process.env.DISCORD_WEBHOOK_URL;
 
-    await axios.post(webhookURL, {
+    const payload = {
       content: `📩 **New Project Message**\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
-    }, {
+    };
+
+    const response = await axios.post(webhookURL, payload, {
       headers: { "Content-Type": "application/json" }
     });
 
-    res.json({ success: true });
+    // Discord usually returns 204 No Content
+    if (response.status === 204) {
+      return res.json({ success: true });
+    } else {
+      return res.status(500).json({ success: false, message: "Failed to send message" });
+    }
 
   } catch (err) {
     console.error("Discord Webhook Error:", err.response?.data || err.message);
-    res.json({ success: false, message: "Failed to send message" });
+    res.status(500).json({ success: false, message: "Failed to send message" });
   }
 });
 
