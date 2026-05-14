@@ -146,7 +146,7 @@ body {
 let rating = 5;
 
 /* =========================
-   STAR SELECT (FORM INPUT)
+   STAR SELECT (INPUT)
 ========================= */
 const starsEl = document.getElementById("stars");
 
@@ -190,9 +190,9 @@ async function submitReview(){
 
   try {
     const res = await fetch("https://a-backend-ufh8.onrender.com/reviews", {
-      method:"POST",
-      headers:{"Content-Type":"application/json"},
-      body:JSON.stringify({
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
         user,
         text,
         rating
@@ -227,7 +227,9 @@ function starsHTML(rating = 5){
   let html = "";
 
   for(let i = 1; i <= 5; i++){
-    html += `<span style="color:#ff003c">${i <= rating ? "★" : "☆"}</span>`;
+    html += `<span style="color:#ff003c; font-size:18px;">
+      ${i <= rating ? "★" : "☆"}
+    </span>`;
   }
 
   return html;
@@ -235,7 +237,7 @@ function starsHTML(rating = 5){
 
 
 /* =========================
-   LOAD REVIEWS
+   LOAD REVIEWS (GRID FIXED)
 ========================= */
 async function loadReviews(){
   try {
@@ -246,7 +248,12 @@ async function loadReviews(){
 
     if(!box) return;
 
-    const cards = data.map(r => `
+    if(!data.length){
+      box.innerHTML = "<p style='color:#777;text-align:center'>No reviews yet</p>";
+      return;
+    }
+
+    box.innerHTML = data.map(r => `
       <div class="review-card">
         <div class="review-stars">
           ${starsHTML(r.rating)}
@@ -257,16 +264,13 @@ async function loadReviews(){
       </div>
     `).join("");
 
-    box.innerHTML = cards + cards;
-
   } catch(err){
-    console.log(err);
+    console.log("Failed to load reviews:", err);
   }
 }
 
 window.addEventListener("DOMContentLoaded", loadReviews);
-</script>
-<script>
+</script><script>
   function goHome(){
   window.location.href="../index.html";
 }
