@@ -190,7 +190,7 @@ app.post("/contact", async (req, res) => {
   }
 
   try {
-    const webhookURL = process.env.DISCORD_WEBHOOK_URL;
+    const webhookURL = process.env.DISCORD_WEBHOOK;
 
     const payload = {
       content: `📩 **New Project Message**\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
