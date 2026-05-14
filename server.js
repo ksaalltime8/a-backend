@@ -165,42 +165,43 @@ app.post("/contact", async (req, res) => {
 
 
 
-
 /* =========================
-   POST /reviews
+   REVIEW ROUTES
 ========================= */
+
+const Review = mongoose.model("Review", {
+  user: String,    // who left the review (email)
+  text: String,    // review text
+  rating: { type: Number, default: 5 } // rating stars
+}, { timestamps: true });
+
+// POST a review
 app.post("/reviews", async (req, res) => {
   try {
     const { user, text, rating } = req.body;
+    if (!user || !text) return res.status(400).json({ success: false, message: "Missing data" });
 
-    if (!user || !text) 
-      return res.status(400).json({ success: false, message: "Missing data" });
-
-    // Optional: check if user purchased a plan
+    // Optional: check if user has a purchased plan
     const hasOrder = await Order.findOne({ email: user });
-    if (!hasOrder) 
-      return res.status(403).json({ success: false, message: "You must purchase a plan to leave a review" });
+    if (!hasOrder) return res.status(403).json({ success: false, message: "You must purchase a plan to leave a review" });
 
     const review = new Review({ user, text, rating: rating || 5 });
     await review.save();
 
     res.json({ success: true, review });
-
   } catch (err) {
-    console.log(err);
+    console.log("Error in /reviews POST:", err);
     res.status(500).json({ success: false });
   }
 });
 
-/* =========================
-   GET /reviews
-========================= */
+// GET all reviews
 app.get("/reviews", async (req, res) => {
   try {
     const reviews = await Review.find().sort({ createdAt: -1 });
     res.json(reviews);
   } catch (err) {
-    console.log(err);
+    console.log("Error in /reviews GET:", err);
     res.status(500).json([]);
   }
 });
