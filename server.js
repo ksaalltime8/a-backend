@@ -156,7 +156,7 @@ app.post("/contact", async (req, res) => {
     res.json({ success: false, message: "Failed to send message" });
   }
 });
-import axios from "axios";
+
 import Review from "./Review.js";
 
 app.post("/reviews", async (req, res) => {
