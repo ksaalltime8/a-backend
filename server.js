@@ -157,6 +157,41 @@ app.post("/contact", async (req, res) => {
   }
 });
 
+async function sendToDiscord(review) {
+  try {
+    await axios.post(process.env.DISCORD_WEBHOOK, {
+      content: "🔥 New Review Received",
+      embeds: [
+        {
+          title: "New Client Review",
+          color: 16711680,
+          fields: [
+            {
+              name: "User",
+              value: review.user || "Anonymous",
+              inline: true
+            },
+            {
+              name: "Rating",
+              value: "⭐".repeat(review.rating || 5),
+              inline: true
+            },
+            {
+              name: "Review",
+              value: review.text
+            }
+          ],
+          timestamp: new Date()
+        }
+      ]
+    });
+
+    console.log("✅ Sent to Discord");
+  } catch (err) {
+    console.log("❌ Discord error:", err.message);
+  }
+}
+
 import Review from "./Review.js";
 
 // CREATE REVIEW (ONLY BUYERS)
@@ -216,43 +251,3 @@ app.get("/reviews", async (req, res) => {
   }
 });
 
-async function sendToDiscord(review) {
-  try {
-    if (!process.env.DISCORD_REVIEW_WEBHOOK) {
-      console.log("Missing Discord webhook");
-      return;
-    }
-
-    await axios.post(process.env.DISCORD_REVIEW_WEBHOOK, {
-      content: "🔥 New Review Received",
-      embeds: [
-        {
-          title: "Client Review",
-          color: 16711680,
-          fields: [
-            {
-              name: "User",
-              value: review.user || "Anonymous",
-              inline: true
-            },
-            {
-              name: "Rating",
-              value: "⭐".repeat(review.rating || 5),
-              inline: true
-            },
-            {
-              name: "Review",
-              value: review.text
-            }
-          ],
-          timestamp: new Date().toISOString()
-        }
-      ]
-    });
-
-    console.log("Discord sent successfully ✔");
-
-  } catch (err) {
-    console.log("Discord FULL ERROR:", err.response?.data || err.message);
-  }
-}
