@@ -200,3 +200,36 @@ app.post("/reviews", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
+
+async function sendToDiscord(review) {
+  try {
+    await axios.post(process.env.DISCORD_WEBHOOK, {
+      content: `🔥 New Review Received`,
+      embeds: [
+        {
+          title: "New Client Review",
+          color: 16711680,
+          fields: [
+            {
+              name: "User",
+              value: review.user || "Anonymous",
+              inline: true
+            },
+            {
+              name: "Rating",
+              value: "⭐".repeat(review.rating || 5),
+              inline: true
+            },
+            {
+              name: "Review",
+              value: review.text
+            }
+          ],
+          timestamp: new Date()
+        }
+      ]
+    });
+  } catch (err) {
+    console.log("Discord error:", err.message);
+  }
+}
