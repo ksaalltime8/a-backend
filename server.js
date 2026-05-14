@@ -48,7 +48,26 @@ const PricingPlan = mongoose.model("PricingPlan", {
   price: Number,
   features: [String]
 });
+const ActivityLog = mongoose.model("ActivityLog", {
+  admin: String,
+  action: String,
+  timestamp: { type: Date, default: Date.now }
+});
 
+async function logActivity(admin, action) {
+  try {
+    await ActivityLog.create({ admin, action });
+  } catch(err) {
+    console.log("Activity log error:", err.message);
+  }
+}
+
+// Login attempts
+const LoginAttempt = mongoose.model("LoginAttempt", {
+  email: String,
+  success: Boolean,
+  timestamp: { type: Date, default: Date.now }
+});
 /* =========================
    ROUTES
 ========================= */
@@ -103,7 +122,25 @@ app.get("/orders/:email", async (req, res) => {
     res.json([]);
   }
 });
+/* ---------- ADMIN LOGIN ---------- */
+app.post("/admin-login", async (req, res) => {
+  const { email, password } = req.body;
+  const admin = await User.findOne({ email, password, role: "admin" });
+  await LoginAttempt.create({ email, success: !!admin });
+  if(!admin) return res.json({ success: false, message: "Invalid admin login" });
+  res.json({ success: true, email: admin.email });
+});
+/* ---------- ACTIVITY LOG ---------- */
+app.get("/admin/activity", async (req,res) => {
+  const logs = await ActivityLog.find({}).sort({ timestamp: -1 }).limit(100);
+  res.json(logs);
+});
 
+/* ---------- LOGIN ATTEMPTS ---------- */
+app.get("/admin/login-attempts", async (req,res) => {
+  const attempts = await LoginAttempt.find({}).sort({ timestamp: -1 }).limit(100);
+  res.json(attempts);
+});
 /* ---------- GET ALL ORDERS (ADMIN) ---------- */
 app.get("/all-orders", async (req, res) => {
   try {
@@ -249,3 +286,4 @@ app.post("/admin/plans/delete", async (req, res) => {
   await PricingPlan.findByIdAndDelete(id);
   res.json({ success: true });
 });
+
