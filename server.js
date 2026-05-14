@@ -218,11 +218,16 @@ app.get("/reviews", async (req, res) => {
 
 async function sendToDiscord(review) {
   try {
+    if (!process.env.DISCORD_REVIEW_WEBHOOK) {
+      console.log("Missing Discord webhook");
+      return;
+    }
+
     await axios.post(process.env.DISCORD_REVIEW_WEBHOOK, {
       content: "🔥 New Review Received",
       embeds: [
         {
-          title: "New Client Review",
+          title: "Client Review",
           color: 16711680,
           fields: [
             {
@@ -244,7 +249,10 @@ async function sendToDiscord(review) {
         }
       ]
     });
+
+    console.log("Discord sent successfully ✔");
+
   } catch (err) {
-    console.log("Discord error:", err.message);
+    console.log("Discord FULL ERROR:", err.response?.data || err.message);
   }
 }
