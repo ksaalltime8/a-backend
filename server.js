@@ -191,7 +191,7 @@ app.post("/contact", async (req, res) => {
 
   try {
     // Discord webhook payload
-    const webhookURL = "https://discord.com/api/webhooks/1503710771887214662/jKVpoTzMpvmiCIkeP48ustF4rrg2GXgfmHseNpSHDrLm9KkwMl6YpsgN2aFwdRgQ2xKJ"; 
+    const webhookURL = process.env.DISCORD_WEBHOOK_URL;
 
     await axios.post(webhookURL, {
       content: `📩 **New Project Message**\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
