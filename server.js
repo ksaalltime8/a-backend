@@ -35,6 +35,19 @@ const Order = mongoose.model("Order", {
   date: String
 });
 
+// Optional: Website content
+const SiteContent = mongoose.model("SiteContent", {
+  heroTitle: String,
+  heroSubtitle: String,
+  bannerURL: String
+});
+
+// Pricing plans
+const PricingPlan = mongoose.model("PricingPlan", {
+  name: String,
+  price: Number,
+  features: [String]
+});
 
 /* =========================
    ROUTES
@@ -151,6 +164,88 @@ app.post("/contact", async (req, res) => {
   }
 });
 
+////////admin page/////////
 
+app.get("/admin/users", async (req, res) => {
+  try {
+    const users = await User.find().sort({ _id: -1 });
+    res.json(users);
+  } catch (err) {
+    console.log(err);
+    res.status(500).json([]);
+  }
+});
 
+// UPDATE user role
+app.post("/admin/users/role", async (req, res) => {
+  const { email, role } = req.body;
+  try {
+    await User.updateOne({ email }, { role });
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
 
+// DELETE user
+app.post("/admin/users/delete", async (req, res) => {
+  const { email } = req.body;
+  try {
+    await User.deleteOne({ email });
+    res.json({ success: true });
+  } catch (err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+// GET site content
+app.get("/admin/content", async (req, res) => {
+  try {
+    const content = await SiteContent.findOne(); // assuming you have a SiteContent model
+    res.json(content);
+  } catch(err) {
+    res.status(500).json({});
+  }
+});
+
+// UPDATE site content
+app.post("/admin/content", async (req, res) => {
+  const { heroTitle, heroSubtitle, bannerURL } = req.body;
+  try {
+    let content = await SiteContent.findOne();
+    if (!content) content = new SiteContent({});
+    content.heroTitle = heroTitle;
+    content.heroSubtitle = heroSubtitle;
+    content.bannerURL = bannerURL;
+    await content.save();
+    res.json({ success: true, content });
+  } catch(err) {
+    res.json({ success: false, error: err.message });
+  }
+});
+// GET plans
+app.get("/admin/plans", async (req, res) => {
+  const plans = await PricingPlan.find().sort({ price: 1 });
+  res.json(plans);
+});
+
+// ADD plan
+app.post("/admin/plans/add", async (req, res) => {
+  const { name, price, features } = req.body;
+  const plan = new PricingPlan({ name, price, features });
+  await plan.save();
+  res.json({ success: true, plan });
+});
+
+// UPDATE plan
+app.post("/admin/plans/update", async (req, res) => {
+  const { id, name, price, features } = req.body;
+  await PricingPlan.findByIdAndUpdate(id, { name, price, features });
+  res.json({ success: true });
+});
+
+// DELETE plan
+app.post("/admin/plans/delete", async (req, res) => {
+  const { id } = req.body;
+  await PricingPlan.findByIdAndDelete(id);
+  res.json({ success: true });
+});
