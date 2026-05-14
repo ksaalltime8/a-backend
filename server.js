@@ -167,61 +167,25 @@ app.post("/contact", async (req, res) => {
 
 
 /* =========================
-   DISCORD QUEUE
-========================= */
-const discordQueue = [];
-let isSendingDiscord = false;
-
-async function processDiscordQueue() {
-  if (isSendingDiscord || !discordQueue.length) return;
-  isSendingDiscord = true;
-
-  const review = discordQueue.shift();
-  try {
-    await axios.post(process.env.DISCORD_REVIEW_WEBHOOK, {
-      content: "🔥 New Review Received",
-      embeds: [
-        {
-          title: "New Client Review",
-          color: 16711680,
-          fields: [
-            { name: "User", value: review.user || "Anonymous", inline: true },
-            { name: "Rating", value: "⭐".repeat(review.rating || 5), inline: true },
-            { name: "Review", value: review.text }
-          ],
-          timestamp: new Date()
-        }
-      ]
-    });
-    console.log("✅ Sent review to Discord");
-  } catch (err) {
-    console.log("❌ Discord error:", err.message);
-  } finally {
-    isSendingDiscord = false;
-    if (discordQueue.length) processDiscordQueue(); // continue queue
-  }
-}
-
-/* =========================
    POST /reviews
 ========================= */
 app.post("/reviews", async (req, res) => {
   try {
     const { user, text, rating } = req.body;
-    if (!user || !text) return res.status(400).json({ success: false, message: "Missing data" });
 
-    // Optional: check if user has purchased a plan
+    if (!user || !text) 
+      return res.status(400).json({ success: false, message: "Missing data" });
+
+    // Optional: check if user purchased a plan
     const hasOrder = await Order.findOne({ email: user });
-    if (!hasOrder) return res.status(403).json({ success: false, message: "You must purchase a plan to leave a review" });
+    if (!hasOrder) 
+      return res.status(403).json({ success: false, message: "You must purchase a plan to leave a review" });
 
     const review = new Review({ user, text, rating: rating || 5 });
     await review.save();
 
-    // Add to Discord queue
-    discordQueue.push(review);
-    processDiscordQueue();
-
     res.json({ success: true, review });
+
   } catch (err) {
     console.log(err);
     res.status(500).json({ success: false });
