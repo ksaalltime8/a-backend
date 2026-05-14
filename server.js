@@ -156,7 +156,7 @@ app.post("/contact", async (req, res) => {
     res.json({ success: false, message: "Failed to send message" });
   }
 });
-import Review from "./Review.js";
+import Review from "./models/Review.js";
 
 // CREATE REVIEW
 app.post("/reviews", async (req, res) => {
@@ -173,7 +173,7 @@ app.post("/reviews", async (req, res) => {
     const review = new Review({
       user,
       text,
-      rating
+      rating: rating || 5
     });
 
     await review.save();
@@ -185,7 +185,6 @@ app.post("/reviews", async (req, res) => {
     res.status(500).json({ success: false });
   }
 });
-
 
 // GET REVIEWS
 app.get("/reviews", async (req, res) => {
