@@ -193,7 +193,7 @@ app.post("/contact", async (req, res) => {
     const webhookURL = process.env.DISCORD_WEBHOOK;
 
     const payload = {
-      content: `📩 **New Project Message**<@563765254388056094>\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
+      content: `📩 **New Project Message**@here\n**Name:** ${name}\n**Email:** ${email}\n**Message:** ${message}`
     };
 
     const response = await axios.post(webhookURL, payload, {
